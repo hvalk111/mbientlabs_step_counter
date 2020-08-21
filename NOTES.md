@@ -30,3 +30,21 @@ MacBook Pro
 sudo nvram bluetoothHostControllerSwitchBehavior=never
 ```
 > Solution was found on [Oliver Jobson's blog](https://www.oliverjobson.co.uk/technology/solved-mac-os-host-usb-bluetooth-device-not-available-for-guest-os-virtual-machine/). My airpods no longer work but oh well
+
+### Start-Up
+
+> Assuming you've gotten everything to work previously, to connect from fresh Linux reboot
+> 1) Plug in dongle
+> 2) Run the following code in terminal
+```
+sudo hciconfig hci0 up
+```
+> 3) Check that the device is found
+```
+sudo hcitool dev
+```
+> Output should look like this:
+```
+Devices:
+      hci0     00:1A:7D:DA:71:13
+```

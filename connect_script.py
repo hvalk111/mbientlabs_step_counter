@@ -1,5 +1,13 @@
-from mbientlab.metawear import MetaWear, libmetawear
+from __future__ import print_function
+from mbientlab.metawear import MetaWear, libmetawear, parse_value
 from mbientlab.metawear.cbindings import *
+from time import sleep
+from threading import Event
 
-device = MetaWear('00:1A:7D:DA:71:13')
+import platform
+import sys
+
+device = MetaWear('FC:A3:80:92:67:02')
 device.connect()
+
+

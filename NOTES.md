@@ -85,3 +85,10 @@ hci0:	Type: Primary  Bus: USB
 ```
 > ... then Linux is picking up your dongle but not connecting to the MMR. Unplugging your dongle and plugging it back in sometimes fixes this problem.
 
+# Data
+
+### Gyroscope
+
+> gyro data is angular velocity in degrees per second. x, y, and z field represent the amount of spin around each axis.
+
+>

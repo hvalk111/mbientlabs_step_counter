@@ -1,4 +1,4 @@
-# usage: python final_script.py (int)time-to-run
+# usage: python final_script.py time-to-run(int)
 from __future__ import print_function
 from mbientlab.metawear import MetaWear, libmetawear, parse_value
 from mbientlab.metawear.cbindings import *
@@ -11,12 +11,14 @@ import numpy as np
 from scipy import signal as sig
 import pyfiglet
 
+# initialize z_list for most recent samples, default walk setting, read in step template
 z_list = []
 walk_list = [False,False]
 step = pd.read_csv('./step_template.csv')
 j = 0
 template = step['acc']
 
+# define parameters and initial conditions for SPRING algo
 epsilon = float(42)
 n = len(template)
 D_recent = [float("inf")]*(n)
@@ -30,9 +32,9 @@ check=0
 len_matches_previous = 0
 
 matches=[]
-
 total_steps = 0
 
+# Define state class, func algo gets called with every new sample
 class State:
     def __init__(self, device):
         self.device = device
@@ -44,23 +46,22 @@ class State:
         self.samples+= 1
         dataz = parse_value(data).y
         
+        #update z_list
         if len(z_list) < 250:
             z_list.append(dataz)
         else:
             z_list.pop(0)
             z_list.append(dataz)
-
+        
+        # if 0.5 second interval, run walk detection
         if self.samples >= 250 and self.samples % 50 == 0:
             f, psd = sig.welch(z_list,fs=100,window='hanning',nperseg=250,detrend='constant')
             if np.mean(psd[2:6])>np.mean(psd[:2]) and np.mean(psd[2:6])>0.002:
                 walk_list.append(True)
                 if walk_list[-2:] == [False,True]:
                     print(pyfiglet.figlet_format('walking'))
-                    #total_steps+=1
-                    #print(pyfiglet.figlet_format(f'{total_steps} steps'))
-                    #total_steps+=1
-                    #print(pyfiglet.figlet_format(f'{total_steps} steps'))
                     
+            # if not, append false to walk list, and reset SPRING initial conditions        
             else:
                 walk_list.append(False)
                 D_recent = [float("inf")]*(n)
@@ -75,15 +76,19 @@ class State:
                 matches=[]
                 if walk_list[-2:] == [True,False]:
                     print(pyfiglet.figlet_format('not walking'))
-
+        
+        # just-in-time normalization of acc_z, add insig. constant to denominator to prevent division by zero
         acc_z = (int(dataz) - np.mean(z_list)) / np.std(z_list) + 0.00001
-
-
+        
+        # follwing code adapted from: https://stackoverflow.com/questions/36549932/pattern-detection-in-time-series-data
+        #       with permission from Nikolas Reible
+        
         #calculation of accumulated distance for each incoming value
         def accdist_calc (incoming_value, temp, Distance_new, Distance_recent):
             for i in range(len(temp)):
                 if i == 0:
                     #start point is corner
+                    # distance metric is squared euclidean distance
                     Distance_new[i] = (incoming_value-temp[i])**2
                 else:
                     #next point is previous value plus most efficient step
@@ -126,8 +131,6 @@ class State:
                     check = check+1                     # OR deduced starting point for i position is greater than the ending point
             if check == n: # if check equals length of template, then add match
                 matches.append(str(d_rep)+","+str(J_s)+","+str(J_e))
-                #total_steps += 1
-                #print(total_steps)
                 d_rep = float("inf")
                 J_s = float("inf")
                 J_e = float("inf")
@@ -141,7 +144,8 @@ class State:
                 S_recent[i] = S_now[i]
 
             j+=1
-     
+            
+            # remove subsequence matches that are entirely contained within another match
             match_idx = []
             for idx,match in enumerate(matches):
                 for match2 in matches:
@@ -151,16 +155,17 @@ class State:
                         match_idx.append(idx)
                         
             matches = [match for idx,match in enumerate(matches) if idx not in match_idx]
-
+            
+            # if new match is found, print to screen
             if len(matches) > len_matches_previous:
                 total_steps += len(matches) - len_matches_previous
                 print(pyfiglet.figlet_format(f'{total_steps} steps'))
 
             len_matches_previous = len(matches)
             
-            
 states = []
 
+# connect to device
 d = MetaWear("FC:A3:80:92:67:06")
 d.connect()
 print("Connected to " + d.address)
@@ -170,6 +175,7 @@ print("Configuring device")
 libmetawear.mbl_mw_settings_set_connection_parameters(states[0].device.board, 7.5, 7.5, 0, 6000)
 sleep(1.5)
 
+# start reading in acc data
 libmetawear.mbl_mw_acc_set_odr(states[0].device.board, 100.0)
 libmetawear.mbl_mw_acc_set_range(states[0].device.board, 16.0)
 libmetawear.mbl_mw_acc_write_acceleration_config(states[0].device.board)
@@ -180,13 +186,16 @@ libmetawear.mbl_mw_datasignal_subscribe(signal, None, states[0].callback)
 libmetawear.mbl_mw_acc_enable_acceleration_sampling(states[0].device.board)
 libmetawear.mbl_mw_acc_start(states[0].device.board)
 
+# continue running for number of seconds defined by user when running script
 sleep(int(sys.argv[1]))
 
 libmetawear.mbl_mw_acc_stop(states[0].device.board)
 libmetawear.mbl_mw_acc_disable_acceleration_sampling(states[0].device.board)
 
+# unsubscribe from stream and disconnect from device
 signal = libmetawear.mbl_mw_acc_get_acceleration_data_signal(states[0].device.board)
 libmetawear.mbl_mw_datasignal_unsubscribe(signal)
 libmetawear.mbl_mw_debug_disconnect(states[0].device.board)
 
+# print total number of samples received
 print("%s -> %d" % (states[0].device.address, states[0].samples))

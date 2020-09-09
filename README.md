@@ -15,7 +15,7 @@
 |[DTW_testing.ipynb](DTW_testing.ipynb)|Testing DTW spring algorithm accuray on walking data|
 |[WD_testing_and_EDA.ipynb](WD_testing_and_EDA.ipynb)|Testing frequency-based walk detection accuracy on walking data|
 |[bluetooth_setup_notes.md](bluetooth_setup_notes.md)|Notes on setting up a bluetooth connection with your MMR through a Linux Virtual machine running on top of OSX|
-|[capstone_presentation](capstone_presentation)|Presentation slide deck|
+|[capstone_presentation.pptx](capstone_presentation.pptx)|Presentation slide deck|
 |[final_script.py](final_script.py)|Final real-time step counting script|
 |[generate_step_template.ipynb](generate_step_template.ipynb)|Script to create average step template from walking data|
 |[parseTraces.py](parseTraces.py)|Script to parse walking data|

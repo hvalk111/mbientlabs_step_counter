@@ -23,5 +23,5 @@
 
 ## Algorithm
 
-![](algo_pic.png =250x)
+![](algo_pic.png =100x)
 

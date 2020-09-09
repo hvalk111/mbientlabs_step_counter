@@ -23,5 +23,5 @@
 
 ## Algorithm
 
-![20%](algo_pic.png)
+![[100x100]|20%](algo_pic.png)
 

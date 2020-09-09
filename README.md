@@ -21,3 +21,7 @@
 |[parseTraces.py](parseTraces.py)|Script to parse walking data|
 |[step_template.csv](step_template.csv)|average normalized accelerometer and gyroscope time-series for a single step|
 
+## Algorithm
+
+![](algo_pic.png)
+
